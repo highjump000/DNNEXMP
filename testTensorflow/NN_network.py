@@ -1298,6 +1298,15 @@ def getWH(array):
 #########################################################
 ##                   keras                             ##
 #########################################################
+### evaluation function in keras ####
+def best_closeDistance(trainV,validV,isMin = 1):
+    if isMin:
+        return (abs(trainV - validV) + 0.1) * (max(validV, trainV))
+    else:
+        return ((1 / abs(trainV - validV+0.0001) + 0.1)) * (min(validV, trainV))
+
+def best_validation(trainV,validV,isMin = 1):
+    return validV
 #### MLP ###
 def Keras_MLP(X,T,topo=[1],actfunc= 'tanh', w_decay = [0.0]):
     n_layer = len(topo)
@@ -1320,7 +1329,8 @@ def Keras_MLP(X,T,topo=[1],actfunc= 'tanh', w_decay = [0.0]):
         model.add(k.layers.Dense(out_w, input_shape=(input_w,)))
     return model
 
-def Keras_train(X,T,keras_model,loss = 'MSE',lr = 0.0001,iteration = 20,show_performance = 0,train_percent = 0.7,batch_size = 128,lr_reduce_factor = 0.2,patience = 0,bestCount=8,verbose=0):
+def Keras_train(X,T,keras_model,loss = 'MSE',lr = 0.0001,iteration = 20,show_performance = 0,train_percent = 0.7,
+                batch_size = 128,lr_reduce_factor = 0.2,patience = 0,bestCount=8,verbose=0,evalFun= best_closeDistance):
     model = k.models.Sequential()
     model.add(keras_model)
     if loss is 'categorical_crossentropy':
@@ -1356,23 +1366,33 @@ def Keras_train(X,T,keras_model,loss = 'MSE',lr = 0.0001,iteration = 20,show_per
     if batch_size < 0:
         batch_size = len(X)
 
+    bestLoc = 0
     for i in range(iteration):
         count += 1
-        histo = model.fit(X, T, batch_size=batch_size, nb_epoch=1, verbose=verbose, validation_split=(1-train_percent),callbacks=[early_stopping,reduce_LR])
+        if train_percent < 1 and train_percent > 0:
+            histo = model.fit(X, T, batch_size=batch_size, nb_epoch=1, verbose=verbose, validation_split=(1-train_percent),callbacks=[early_stopping,reduce_LR])
+        else:
+            histo = model.fit(X, T, batch_size=batch_size, nb_epoch=1, verbose=verbose)
 
-        learningRate = histo.history.get('lr')
+        #learningRate = histo.history.get('lr')
         #print 'learning rate : ' , learningRate[0]
-
 
         if loss is 'categorical_crossentropy':
             train_costV = histo.history.get('acc')[0]
-            valid_costV = histo.history.get('val_acc')[0]
-            evalV = ((1/abs(train_costV - valid_costV) + 0.1)) *(min(valid_costV, train_costV))
+            if train_percent < 1 and train_percent > 0:
+                valid_costV = histo.history.get('val_acc')[0]
+            else:
+                valid_costV = train_costV
+            evalV = evalFun(train_costV,valid_costV,isMin=0)
+
             print'Interation ', i, '/', iteration, 'evalV :', evalV, ' eval : ', eval,' train_eval : ',train_costV,' valid_eval : ',valid_costV, 'count : ',count
         else:
             train_costV = histo.history.get('loss')[0]
-            valid_costV = histo.history.get('val_loss')[0]
-            evalV = (abs(train_costV - valid_costV) + 0.1) * (max(valid_costV, train_costV))
+            if train_percent < 1 and train_percent > 0:
+                valid_costV = histo.history.get('val_loss')[0]
+            else:
+                valid_costV = train_costV
+            evalV = evalFun(train_costV,valid_costV,isMin=1)
             print'Interation ', i, '/', iteration, 'evalV :', evalV, ' eval : ', eval, ' train_eval : ', train_costV, ' valid_eval : ', valid_costV,'count : ',count
 
         loss_train.append(train_costV)
@@ -1400,11 +1420,12 @@ def Keras_train(X,T,keras_model,loss = 'MSE',lr = 0.0001,iteration = 20,show_per
         pre_cost = train_costV
     if show_performance:
         dplt.done()
+
     return k.models.load_model('nn_model.h5')
+
 
 #### preprocess in keras ####
 def Keras_preprocess_FeatureScaling(X,T,range=[1,-1]):
     resX = featureScaling(X,range[0],range[1])
     resT = featureScaling(T,range[0],range[1])
     return resX,resT
-

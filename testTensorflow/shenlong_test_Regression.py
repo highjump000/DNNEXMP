@@ -1,6 +1,6 @@
 #created by bohuai jiang
-#on 2017/2/20
-#regression test
+#on 2017/2/23
+#test performace for simple neural net
 import TradingFun as TF
 import numpy as np
 import NN_network as nn
@@ -9,7 +9,7 @@ from keras.layers import Convolution1D,MaxPooling1D,Activation,Flatten,Dropout,D
 import matplotlib.pyplot as plt
 from keras.regularizers import l2, activity_l2
 import tensorflow as tf
-#np.random.seed(1337)  # for reproducibility
+np.random.seed(1337)  # for reproducibility
 def toOneHot(input):
     DL = len(input)
     output = np.zeros([DL,2])
@@ -50,52 +50,39 @@ def adjust(data,period,forwardOne):
     return data
 ##########################################################
 
-period = 30
+period = 100
 update = 0
-a = 10
+a = 30
 
 #### load data
 
 data = TF.getData(15,'rb',[2010,1],[2013,1])
 close = data.close
-X,P = TF.getXY(period,close,forwardOne=0)
-# change X to diff
-if update:
-    T = TF.getQtable(P,15,0)
-    np.save('T',T)
-T = np.load('T.npy')
-#X = np.diff(X,axis=1)
-#X = np.reshape(X,[-1,period-1,1])
+diff_close = np.diff(close)
+# re-calibrate data
+data.close = data.close[0:-1]
+data.delta_close = data.delta_close[0:-1]
+data.timestamps = data.timestamps[0:-1]
 
+
+X,P = TF.getXY(period,diff_close,forwardOne=1)
+T = toOneHot(P)
 
 #### CREATE KERAS MODEL ####
-model = nn.Keras_MLP(X,T,topo = [100])
-sX,sT = nn.Keras_preprocess_FeatureScaling(X,T)
-model = nn.Keras_train(sX,sT,model,lr=0.005,show_performance=1,iteration=400,batch_size= -1,bestCount=10)
-Y = model.predict(sX)
-Y = nn.defeatureScaling(Y,1,-1,nn.getMaxMin(sT))
+model = nn.Keras_MLP(X,T,topo = [0])
+X = nn.featureScaling(X,1,-1)
+model = nn.Keras_train(X,T,model,loss='categorical_crossentropy',show_performance=1,train_percent=-1)
+Y = model.predict(X)
 
 #### TO TRADING SIGNAL ####
 
-bsig,ssig = getSigRegression(Y)
-data = adjust(data,period,0)
-
-print len(bsig)
-print len(ssig)
-
-a = TF.getA(Y)
-
+bsig,ssig = getSig(Y,a)
 plt.figure().suptitle('bsig')
 plt.plot(bsig)
 
-plt.figure().suptitle('ssig')
-plt.plot(ssig)
+data = adjust(data,period,1)
 
-plt.figure().suptitle('act')
-plt.plot(a)
 
 TF.plotPerformance(data,bsig,ssig,'rb')
-profit = TF.TSL(a,data.close,15,2,1)
-TF.plotPerformanceSimple(profit,'stp only')
 plt.show()
 

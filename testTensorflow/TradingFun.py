@@ -341,7 +341,7 @@ def linearRegression_getY(w,X):
     # convert to matrix
     Xb = np.matrix(Xb)
 
-    Y = Xb*w
+    Y = Xb*wh
     return Y
 
 #########################################
@@ -359,15 +359,15 @@ def toBsigSsig(ps):
 def plotPerformance(data,bsig,ssig,name):
     pf = PlainFilter()
     frs = FixedRatioTrainStop()
-    ps = eu.tp15(data.close, bsig, ssig)
-    bsig, ssig = toBsigSsig(ps)
+    #ps = eu.tp15(data.close, bsig, ssig)
+    #bsig, ssig = toBsigSsig(ps)
     ps = pf.eval(data, [], [bsig, ssig])
 
 
     #plt.figure().suptitle('ps')
     #plt.plot(ps)
 
-    #ps = frs.eval(data, [15], ps)
+    ps = frs.eval(data, [15], ps)
 
    # plt.figure().suptitle('ps2')
    # plt.plot(ps)
