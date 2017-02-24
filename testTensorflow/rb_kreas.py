@@ -15,7 +15,7 @@ import NN_network as nn
 window_size = 100
 name = 'rb'
 
-np.random.seed(1337)  # for reproducibility
+#np.random.seed(1337)  # for reproducibility
 def correlation(y_true, y_pred):
     return -K.abs(K.sum((y_pred - K.mean(y_pred))*y_true, axis=-1))
 
@@ -82,9 +82,9 @@ model.add(Dense(output_dim=2))
 
 #model.fit(train_x, train_y, batch_size=len(train_x), nb_epoch=20)
 
-model = nn.Keras_train(train_x,train_y,model,lr=0.001,batch_size=8,train_percent=-1,show_performance=1,loss='categorical_crossentropy',evalFun=nn.best_validation,iteration=20,bestCount=50)
+model = nn.Keras_train(train_x,train_y,model,lr=0.001,batch_size=1,train_percent=-1,show_performance=0,loss='categorical_crossentropy',iteration=1,evalFun=nn.best_validation)
 
-# loss_and_metrics = model.evaluate(train_x, train_y, batch_size=32)
+# loss_and_metrics = model.evaluate(train_x, train_y, batch_size=wwww32)
 
 predict_y = model.predict(train_x[:length, :, :])
 
@@ -92,7 +92,6 @@ bsig = np.zeros(length)
 ssig = np.zeros(length)
 
 a = 30
-
 th_up = np.percentile(predict_y[:, 0], 100-a)
 th_down = np.percentile(predict_y[:, 0], a)
 

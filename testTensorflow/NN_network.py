@@ -1401,7 +1401,7 @@ def Keras_train(X,T,keras_model,loss = 'MSE',lr = 0.0001,iteration = 20,show_per
         Xaxis.append(i)
 
 
-        if (eval > evalV and loss is not 'categorical_crossentropy')or(eval < evalV and loss is 'categorical_crossentropy')and i>0 :
+        if (eval > evalV and loss is not 'categorical_crossentropy')or(eval < evalV and loss is 'categorical_crossentropy')and i>0 and train_costV < 0.55:
             eval = evalV
             model.save('nn_model.h5')
             #model_out = k.models.load_model('nn_model.h5')
@@ -1423,8 +1423,36 @@ def Keras_train(X,T,keras_model,loss = 'MSE',lr = 0.0001,iteration = 20,show_per
 
     return k.models.load_model('nn_model.h5')
 
-
-#### preprocess in keras ####
+def Keras_train_Simple(X,T,tx,tT,keras_model,opt= 'adadelta',loss = 'MSE',eval='loss',iteration = 20,batch_size = 128):
+        model = k.models.Sequential()
+        model.add(keras_model)
+        if loss is 'categorical_crossentropy':
+            model.add(k.layers.Activation('softmax'))
+        model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
+        dplt = DynamicPlot()
+        dplt.on_launch('loss')
+        lines1 = dplt.requestLines('train', 'b-')
+        lines2 = dplt.requestLines('validation', 'g-')
+        Xaxis = []
+        loss_train = []
+        loss_val = []
+        for i in range(iteration):
+            histo = model.fit(X, T, batch_size=batch_size, nb_epoch=1, verbose=0,
+                              validation_data=[tx,tT])
+            if eval is 'acc':
+                train_costV = histo.history.get('acc')[0]
+                valid_costV = histo.history.get('val_acc')[0]
+            else:
+                train_costV = histo.history.get('loss')[0]
+                valid_costV = histo.history.get('val_loss')[0]
+            loss_train.append(train_costV)
+            loss_val.append(valid_costV)
+            Xaxis.append(i)
+            dplt.on_running(lines1, Xaxis, loss_train)
+            dplt.on_running(lines2, Xaxis, loss_val)
+            dplt.draw()
+        dplt.done()
+        return model
 def Keras_preprocess_FeatureScaling(X,T,range=[1,-1]):
     resX = featureScaling(X,range[0],range[1])
     resT = featureScaling(T,range[0],range[1])
