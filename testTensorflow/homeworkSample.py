@@ -60,9 +60,9 @@ model.add(Activation('sigmoid'))
 model.add(Dense(50))
 model.add(Activation('sigmoid'))
 model.add(Dense(nb_classes))
-model.add(Activation('softmax'))
+#model.add(Activation('softmax'))
 
-adadelta = adadelta(lr=1.5)
+#adadelta = adadelta(lr=1.5)
 
 model = nn.Keras_train(trainX,trainT,model,show_performance=1,loss='categorical_crossentropy')
 

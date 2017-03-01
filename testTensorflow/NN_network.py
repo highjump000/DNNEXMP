@@ -1359,9 +1359,16 @@ def Keras_train(X,T,keras_model,loss = 'MSE',lr = 0.0001,iteration = 20,show_per
         eval = np.inf
     bestLoc = 0
     count = -1
-    early_stopping = k.callbacks.EarlyStopping(monitor='val_loss', patience=patience)
-    #keras.callbacks.TensorBoard(log_dir='./logs', histogram_freq=0, write_graph=True, write_images=False)
-    reduce_LR = k.callbacks.ReduceLROnPlateau(monitor='val_loss', factor = lr_reduce_factor,patience=int(patience*0.3))
+    if train_percent < 1 and train_percent > 0:
+        early_stopping = k.callbacks.EarlyStopping(monitor='val_loss', patience=patience)
+        tf_board = k.callbacks.TensorBoard(log_dir='./logs', histogram_freq=0, write_graph=True, write_images=False)
+        reduce_LR = k.callbacks.ReduceLROnPlateau(monitor='val_loss', factor = lr_reduce_factor,patience=int(patience*0.3))
+    else:
+        early_stopping = k.callbacks.EarlyStopping(monitor='loss', patience=patience)
+        tf_board = k.callbacks.TensorBoard(log_dir='./logs', histogram_freq=0, write_graph=True, write_images=True)
+        reduce_LR = k.callbacks.ReduceLROnPlateau(monitor='loss', factor=lr_reduce_factor,
+                                                  patience=int(patience * 0.3))
+
 
     if batch_size < 0:
         batch_size = len(X)
@@ -1369,13 +1376,15 @@ def Keras_train(X,T,keras_model,loss = 'MSE',lr = 0.0001,iteration = 20,show_per
     bestLoc = 0
     for i in range(iteration):
         count += 1
-        if train_percent < 1 and train_percent > 0:
-            histo = model.fit(X, T, batch_size=batch_size, nb_epoch=1, verbose=verbose, validation_split=(1-train_percent),callbacks=[early_stopping,reduce_LR])
-        else:
-            histo = model.fit(X, T, batch_size=batch_size, nb_epoch=1, verbose=verbose)
 
-        #learningRate = histo.history.get('lr')
+        if train_percent < 1 and train_percent > 0:
+            histo = model.fit(X, T, batch_size=batch_size, nb_epoch=1, verbose=verbose, validation_split=(1-train_percent),callbacks=[early_stopping,reduce_LR,tf_board])
+        else:
+            histo = model.fit(X, T, batch_size=batch_size, nb_epoch=1, verbose=verbose,callbacks=[early_stopping,reduce_LR,tf_board])
+
+       # learningRate = histo.history.get('lr')
         #print 'learning rate : ' , learningRate[0]
+
 
         if loss is 'categorical_crossentropy':
             train_costV = histo.history.get('acc')[0]
@@ -1401,7 +1410,7 @@ def Keras_train(X,T,keras_model,loss = 'MSE',lr = 0.0001,iteration = 20,show_per
         Xaxis.append(i)
 
 
-        if (eval > evalV and loss is not 'categorical_crossentropy')or(eval < evalV and loss is 'categorical_crossentropy')and i>0 and train_costV < 0.55:
+        if (eval > evalV and loss is not 'categorical_crossentropy')or(eval < evalV and loss is 'categorical_crossentropy')and i>0:
             eval = evalV
             model.save('nn_model.h5')
             #model_out = k.models.load_model('nn_model.h5')

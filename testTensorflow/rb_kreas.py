@@ -1,9 +1,10 @@
-from keras.models import Sequential
+
+from keras.models import Sequential,Model
 from keras import backend as K
-from keras.layers import Dense, Activation, Flatten, Dropout
+from keras.layers import Dense, Activation, Flatten, Dropout,Input
 from keras.layers.convolutional import Convolution1D
 from keras.regularizers import l2, activity_l2
-
+from keras.utils.visualize_util import plot
 from pyelf.eldata import Data
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,10 +13,10 @@ from keras.utils import np_utils
 import TradingFun as TF
 import NN_network as nn
 
-window_size = 100
+window_size = 80
 name = 'rb'
 
-#np.random.seed(1337)  # for reproducibility
+np.random.seed(1337)  # for reproducibility
 def correlation(y_true, y_pred):
     return -K.abs(K.sum((y_pred - K.mean(y_pred))*y_true, axis=-1))
 
@@ -66,7 +67,15 @@ print 'end of preprocessing'
 #plt.plot(train_y)
 #plt.show()
 # print train_x.shape
-
+S = Input(shape = [window_size,1])
+h = Convolution1D(100,30,border_mode='valid')(S)
+h = Activation('tanh')(h)
+h = Flatten()(h)
+h = Dense(30)(h)
+h = Activation('tanh')(h)
+V = Dense(2)(h)
+model = Model(input=S,output= V)
+'''
 model = Sequential()
 model.add(Convolution1D(100, 30, border_mode='same', input_shape=train_x.shape[1:]))
 model.add(Activation('tanh'))
@@ -76,15 +85,15 @@ model.add(Dense(output_dim=30, W_regularizer=l2(0.005)))
 model.add(Activation('tanh'))
 model.add(Dropout(0.25))
 model.add(Dense(output_dim=2))
-#model.add(Activation('softmax'))
-#model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+model.add(Activation('softmax'))
 
-
-#model.fit(train_x, train_y, batch_size=len(train_x), nb_epoch=20)
-
-model = nn.Keras_train(train_x,train_y,model,lr=0.001,batch_size=1,train_percent=-1,show_performance=0,loss='categorical_crossentropy',iteration=1,evalFun=nn.best_validation)
-
-# loss_and_metrics = model.evaluate(train_x, train_y, batch_size=wwww32)
+plot(model, to_file='rb_model.png')
+model.compile(loss='categorical_crossentropy', optimizer='adam')
+for i in range(300):
+    print i
+    model.train_on_batch(train_x,train_y)
+'''
+model = nn.Keras_train(train_x,train_y,model,lr=0.004,batch_size=-1,train_percent=-1,show_performance=1,loss='categorical_crossentropy',iteration=30,evalFun=nn.best_validation)
 
 predict_y = model.predict(train_x[:length, :, :])
 
@@ -105,7 +114,7 @@ data.timestamps = data.timestamps[window_size:]
 TF.plotPerformance(data,bsig,ssig,'rb')
 
 
-data = d.extract_data_by_period([[2013, 1], [2017, 1]])
+data = d.extract_data_by_period([[2013, 1], [2015, 1]])
 close_ = np.copy(data.close)
 
 dc = np.copy(data.delta_close)

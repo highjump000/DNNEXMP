@@ -29,6 +29,9 @@ def getSig(Y,a):
     bsig[Y[:, 1] > th_up] = 1
     ssig[Y[:, 0] < th_down] = 1
     return bsig,ssig
+def modifyT(T,a):
+    length = len(Y)
+    up
 
 def getSigRegression(Y):
     length = len(Y)
@@ -51,8 +54,8 @@ def adjust(data,period,forwardOne):
 ##########################################################
 
 period = 100
-update = 0
-a = 30
+update = 1
+layer = 30
 
 #### load data
 
@@ -69,9 +72,9 @@ X,P = TF.getXY(period,diff_close,forwardOne=1)
 T = toOneHot(P)
 
 #### CREATE KERAS MODEL ####
-model = nn.Keras_MLP(X,T,topo = [0])
-X = nn.featureScaling(X,1,-1)
-model = nn.Keras_train(X,T,model,loss='categorical_crossentropy',show_performance=1,train_percent=-1)
+model = nn.Keras_MLP(X,T,topo = [1000,500,250,200,20,10])
+#X = nn.featureScaling(X,1,-1)
+model = nn.Keras_train(X,T,model,loss='categorical_crossentropy',show_performance=1,train_percent=-1,batch_size=2048)
 Y = model.predict(X)
 
 #### TO TRADING SIGNAL ####

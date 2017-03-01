@@ -11,6 +11,7 @@ from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Convolution2D, MaxPooling2D
 from keras.utils import np_utils
 from keras import backend as K
+import NN_network as nn
 import h5py
 from keras.models import load_model
 
@@ -76,16 +77,17 @@ model.add(Activation('sigmoid'))
 model.add(Dense(50))
 model.add(Activation('sigmoid'))
 model.add(Dense(nb_classes))
-model.add(Activation('softmax'))
+#model.add(Activation('softmax'))
 
+model = nn.Keras_train(X_train,Y_train,model,loss='categorical_crossentropy')
 
-model.compile(loss='categorical_crossentropy',
-              optimizer='adadelta',
-              metrics=['accuracy'])
+#model.compile(loss='categorical_crossentropy',
+#              optimizer='adadelta',
+#              metrics=['accuracy'])
 
-hist = model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
-          verbose=1)
-model.save('mnist_model.h5')
+#hist = model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
+#          verbose=1)
+#model.save('mnist_model.h5')
 
 ############################################################################
 ##                         out sample test                                ##
