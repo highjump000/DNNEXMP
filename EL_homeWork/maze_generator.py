@@ -1,5 +1,6 @@
 import random
 from PIL import Image
+import numpy as np
 
 
 imgx = 500
@@ -11,13 +12,13 @@ my = 50  # width and height of the maze
 maze = [[0 for x in range(mx)] for y in range(my)]
 dx = [0, 1, 0, -1]
 dy = [-1, 0, 1, 0]  # 4 directions to move in the maze
-color = [(0, 0, 0), (255, 255, 255)]  # RGB colors of the maze
+color = [(0, 0, 0), (255, 255, 255),(0, 255, 0),(255, 0, 0)]  # RGB colors of the maze
 # start the maze from a random cell
 cx = random.randint(0, mx - 1)
 cy = random.randint(0, my - 1)
 maze[cy][cx] = 1
 stack = [(cx, cy, 0)]  # stack element: (x, y, direction)
-
+'''
 while len(stack) > 0:
     (cx, cy, cd) = stack[-1]
     # to prevent zigzags:
@@ -31,7 +32,7 @@ while len(stack) > 0:
         dirRange = range(4)
 
     # find a new cell to add
-    nlst = []  # list of available neighbors
+    nlst = []  # list of available neighborsimg
     for i in dirRange:
         nx = cx + dx[i]
         ny = cy + dy[i]
@@ -56,10 +57,23 @@ while len(stack) > 0:
         stack.append((cx, cy, ir))
     else:
         stack.pop()
+# change it to [0,1] list
+maze[0][0] = 3 # end point
+maze[my-1][mx-1] = 2 # start point
 
-# paint the maze
+for i in range(len(maze)):
+    print maze[i]
+'''
+maze = np.load('maze.npy')
+
+# save maze in array form
 for ky in range(imgy):
     for kx in range(imgx):
-        pixels[kx, ky] = color[maze[my * ky / imgy][mx * kx / imgx]]
+       pixels[kx, ky] = color[maze[my * ky / imgy][mx * kx / imgx]]
+
+
+#np.save('maze',maze)
+
+image.show("Maze_" + str(mx) + "x" + str(my) + ".png", "PNG")
 
 image.save("Maze_" + str(mx) + "x" + str(my) + ".png", "PNG")

@@ -1,0 +1,16 @@
+another thought
+
+the main idea of deep Q is n times trying + Q table regression;
+
+for original deep "discount factor" is useful. acted as a memory decay.
+however in trading environment we more interested in maximum every signal
+reward made by each action.
+
+again, original Deep Q needs n times trying to complete its Q table. Then
+"memorise" it(Q table) to make proper actions. In our instance Q table can simply
+be generated base on different exist market strategy.
+
+nots: there are two method of training a deep Q
+1. out market strategy is given , let deep Q to learning in market strategy
+this can be convert to RF + supervised Learning
+2. let deep Q to distinguish different market's states
