@@ -31,7 +31,6 @@ def getSig(Y,a):
     return bsig,ssig
 def modifyT(T,a):
     length = len(Y)
-    up
 
 def getSigRegression(Y):
     length = len(Y)
